@@ -55,10 +55,15 @@ struct {
 	{ "OpenVPN.Cert", "--cert", 1 },
 	{ "OpenVPN.Key", "--key", 1 },
 	{ "OpenVPN.MTU", "--mtu", 1 },
+	{ "OpenVPN.NSCertType", "--ns-cert-type", 1 },
 	{ "OpenVPN.Proto", "--proto", 1 },
 	{ "OpenVPN.Port", "--port", 1 },
 	{ "OpenVPN.AuthUserPass", "--auth-user-pass", 1 },
+	{ "OpenVPN.AskPass", "--askpass", 1 },
+	{ "OpenVPN.AuthNoCache", "--auth-nocache", 0 },
 	{ "OpenVPN.TLSRemote", "--tls-remote", 1 },
+	{ "OpenVPN.TLSAuth", NULL, 1 },
+	{ "OpenVPN.TLSAuthDir", NULL, 1 },
 	{ "OpenVPN.Cipher", "--cipher", 1 },
 	{ "OpenVPN.Auth", "--auth", 1 },
 	{ "OpenVPN.CompLZO", "--comp-lzo", 0 },
@@ -203,6 +208,9 @@ static int task_append_config_data(struct connman_provider *provider,
 	int i;
 
 	for (i = 0; i < (int)ARRAY_SIZE(ov_options); i++) {
+		if (ov_options[i].ov_opt == NULL)
+			continue;
+
 		option = connman_provider_get_string(provider,
 					ov_options[i].cm_opt);
 		if (option == NULL)
@@ -231,6 +239,15 @@ static int ov_connect(struct connman_provider *provider,
 	}
 
 	task_append_config_data(provider, task);
+
+	option = connman_provider_get_string(provider, "OpenVPN.TLSAuth");
+	if (option != NULL) {
+		connman_task_add_argument(task, "--tls-auth", option);
+		option = connman_provider_get_string(provider,
+				"OpenVPN.TLSAuthDir");
+		if (option != NULL)
+			connman_task_add_argument(task, option, NULL);
+	}
 
 	connman_task_add_argument(task, "--syslog", NULL);
 

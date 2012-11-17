@@ -384,6 +384,8 @@ static int get_hidden_connections(int max_ssids,
 			continue;
 
 		keyfile = connman_storage_load_service(services[i]);
+		if (keyfile == NULL)
+			continue;
 
 		value = g_key_file_get_boolean(keyfile,
 					services[i], "Hidden", NULL);
@@ -825,6 +827,8 @@ static int get_latest_connections(int max_ssids,
 			continue;
 
 		keyfile = connman_storage_load_service(services[i]);
+		if (keyfile == NULL)
+			continue;
 
 		str = g_key_file_get_string(keyfile,
 					services[i], "Favorite", NULL);
@@ -1233,6 +1237,14 @@ static void disconnect_callback(int result, GSupplicantInterface *interface,
 								void *user_data)
 {
 	struct wifi_data *wifi = user_data;
+
+	DBG("result %d supplicant interface %p wifi %p",
+			result, interface, wifi);
+
+	if (result == -ECONNABORTED) {
+		DBG("wifi interface no longer available");
+		return;
+	}
 
 	if (wifi->network != NULL) {
 		/*

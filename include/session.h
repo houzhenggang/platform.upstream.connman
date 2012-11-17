@@ -51,12 +51,6 @@ enum connman_session_type {
 
 struct connman_session;
 
-struct connman_session_bearer {
-	char *name;
-	connman_bool_t match_all;
-	enum connman_service_type service_type;
-};
-
 struct connman_session_config {
 	connman_bool_t priority;
 	enum connman_session_roaming_policy roaming_policy;
@@ -65,19 +59,21 @@ struct connman_session_config {
 	GSList *allowed_bearers;
 };
 
+typedef void (* connman_session_config_cb) (struct connman_session *session,
+					struct connman_session_config *config,
+					void *user_data, int err);
+
 struct connman_session_policy {
 	const char *name;
 	int priority;
-	struct connman_session_config *(*create)(
-					struct connman_session *session);
+	int (*create)(struct connman_session *session,
+			connman_session_config_cb callback,
+			void *user_data);
 	void (*destroy)(struct connman_session *session);
 };
 
 int connman_session_policy_register(struct connman_session_policy *config);
 void connman_session_policy_unregister(struct connman_session_policy *config);
-
-GSList *connman_session_allowed_bearers_any(void);
-void connman_session_free_bearers(GSList *bearers);
 
 struct connman_session_config *connman_session_create_default_config(void);
 

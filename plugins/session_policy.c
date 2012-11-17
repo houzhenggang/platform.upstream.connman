@@ -35,20 +35,26 @@
 
 static GHashTable *config_hash;
 
-static struct connman_session_config *policy_create(
-					struct connman_session *session)
+static int policy_create(struct connman_session *session,
+				connman_session_config_cb callback,
+				void *user_data)
 {
 	struct connman_session_config *config;
 
 	DBG("session %p", session);
 
+	if (callback == NULL)
+		return -EINVAL;
+
 	config = connman_session_create_default_config();
 	if (config == NULL)
-		return NULL;
+		return -ENOMEM;
 
 	g_hash_table_replace(config_hash, session, config);
 
-	return config;
+	(*callback)(session, config, user_data, 0);
+
+	return 0;
 }
 
 static void policy_destroy(struct connman_session *session)
@@ -65,14 +71,6 @@ static struct connman_session_policy session_policy = {
 	.destroy = policy_destroy,
 };
 
-static void cleanup_config(gpointer user_data)
-{
-	struct connman_session_config *config = user_data;
-
-	connman_session_free_bearers(config->allowed_bearers);
-	g_free(config);
-}
-
 static int session_policy_init(void)
 {
 	int err;
@@ -82,7 +80,7 @@ static int session_policy_init(void)
 		return err;
 
 	config_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL,
-						cleanup_config);
+						g_free);
 	if (config_hash == NULL) {
 		connman_session_policy_unregister(&session_policy);
 		return -ENOMEM;
