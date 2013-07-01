@@ -94,9 +94,11 @@ ln -s ../connman.service %{buildroot}%{_unitdir}/network.target.wants/connman.se
 
 
 %files test
+%dir %{_libdir}/%{name}
 %{_libdir}/%{name}/test/*
 
 %files devel
+%dir %{_includedir}/connman
 %{_includedir}/connman/*.h
 %{_libdir}/pkgconfig/*.pc
 
