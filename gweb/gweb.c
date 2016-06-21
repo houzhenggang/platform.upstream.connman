@@ -567,7 +567,11 @@ static void start_request(struct web_session *session)
 {
 	GString *buf = session->send_buffer;
 	const char *version;
+#if defined TIZEN_EXT
+	const guint8 *body = NULL;
+#else
 	const guint8 *body;
+#endif
 	gsize length;
 
 	debug(session->web, "request %s from %s",
@@ -628,8 +632,12 @@ static void start_request(struct web_session *session)
 			g_string_append_printf(buf, "%zx\r\n", length);
 			g_string_append_len(buf, (char *) body, length);
 			g_string_append(buf, "\r\n");
-		} else if (session->fd == -1)
-			g_string_append_len(buf, (char *) body, length);
+		} else if (session->fd == -1) {
+#if defined TIZEN_EXT
+			if(body)
+#endif
+				g_string_append_len(buf, (char *) body, length);
+		}
 	}
 }
 
@@ -1489,6 +1497,20 @@ GWebParser *g_web_parser_new(const char *begin, const char *end,
 
 	parser->ref_count = 1;
 
+#if defined TIZEN_EXT
+	parser->begin_token = g_strdup(begin);
+	if (!parser->begin_token) {
+		g_free(parser);
+		return NULL;
+	}
+
+	parser->end_token = g_strdup(end);
+	if (!parser->end_token) {
+		g_free(parser->begin_token);
+		g_free(parser);
+		return NULL;
+	}
+#else
 	parser->begin_token = g_strdup(begin);
 	parser->end_token = g_strdup(end);
 
@@ -1496,7 +1518,7 @@ GWebParser *g_web_parser_new(const char *begin, const char *end,
 		g_free(parser);
 		return NULL;
 	}
-
+#endif
 	parser->func = func;
 	parser->user_data = user_data;
 
