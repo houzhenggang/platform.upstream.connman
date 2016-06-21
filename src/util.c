@@ -48,7 +48,11 @@ int __connman_util_get_random(uint64_t *val)
 	if (read(f, val, sizeof(uint64_t)) < 0) {
 		r = -errno;
 		connman_warn_once("Could not read from "URANDOM);
+#if defined TIZEN_EXT
+		*val = (uint64_t) random();
+#else
 		*val = random();
+#endif
 	}
 
 	return r;
