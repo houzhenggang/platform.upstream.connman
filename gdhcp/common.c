@@ -70,7 +70,11 @@ int dhcp_get_random(uint64_t *val)
 		random_fd = open(URANDOM, O_RDONLY);
 		if (random_fd < 0) {
 			r = -errno;
+#if defined TIZEN_EXT
+			*val = (uint64_t) random();
+#else
 			*val = random();
+#endif
 
 			return r;
 		}
@@ -78,7 +82,11 @@ int dhcp_get_random(uint64_t *val)
 
 	if (read(random_fd, val, sizeof(uint64_t)) < 0) {
 		r = -errno;
+#if defined TIZEN_EXT
+		*val = (uint64_t) random();
+#else
 		*val = random();
+#endif
 
 		return r;
 	}
@@ -192,7 +200,11 @@ static const uint8_t len_of_option_as_string[] = {
 
 static int sprint_nip(char *dest, const char *pre, const uint8_t *ip)
 {
+#if defined TIZEN_EXT
+	return snprintf(dest, strlen(pre) + 16,"%s%u.%u.%u.%u", pre, ip[0], ip[1], ip[2], ip[3]);
+#else
 	return sprintf(dest, "%s%u.%u.%u.%u", pre, ip[0], ip[1], ip[2], ip[3]);
+#endif
 }
 
 /* Create "opt_value1 option_value2 ..." string */
@@ -220,12 +232,20 @@ char *malloc_option_value_string(uint8_t *option, GDHCPOptionType type)
 			break;
 		case OPTION_U16: {
 			uint16_t val_u16 = get_be16(option);
+#if defined TIZEN_EXT
+			dest += snprintf(dest, upper_length + 1, "%u", val_u16);
+#else
 			dest += sprintf(dest, "%u", val_u16);
+#endif
 			break;
 		}
 		case OPTION_U32: {
 			uint32_t val_u32 = get_be32(option);
+#if defined TIZEN_EXT
+			dest += snprintf(dest, upper_length + 1, "%u", val_u32);
+#else
 			dest += sprintf(dest, "%u", val_u32);
+#endif
 			break;
 		}
 		case OPTION_STRING:
